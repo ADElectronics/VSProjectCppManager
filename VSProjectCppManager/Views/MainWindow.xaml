@@ -26,18 +26,24 @@
                 <TextBlock Margin="5" Text="Путь к проекту:"/>
                 <DockPanel LastChildFill="True">
                     <Button Margin="0,0,5,0" Width="22" DockPanel.Dock="Right" Content="..." Command="{Binding C_SetPathToProject}"/>
-                    <TextBox Margin="5,0,5,0" Text="{Binding Path=PathToProject}"/>
+                    <TextBox Margin="5,0,5,0" Height="20" Text="{Binding Path=PathToProject}"/>
                 </DockPanel>
 
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock Margin="5" Text="Найденный файл *.vcxproj.filters в папке проекта:"/>
-                    <ComboBox Margin="5,2,5,2" Height="20" SelectedItem="{Binding Path=SelectedFilterFile}" ItemsSource="{Binding Path=FilterFilesList}"/>
-                </StackPanel>
-
-                <TextBlock Margin="5" Text="Фильтр файлов проекта по расширению:"/>
                 <DockPanel LastChildFill="True">
-                    <Button Margin="1" Width="70" Content="Обновить" Command="{Binding C_UpdateProject}"/>
-                    <TextBox Margin="5,0,5,0" Text="{Binding Path=FilesFilter}">
+                    <TextBlock Margin="5" Text="Файл проекта *.vcxproj :"/>
+                    <ComboBox Margin="0,2,5,2" Height="20" SelectedItem="{Binding Path=SelectedProjectFile}" ItemsSource="{Binding Path=ProjectFilesList}"/>
+                </DockPanel>
+                
+                <DockPanel LastChildFill="True">
+                    <TextBlock Margin="5" Text="Файл фильтров *.vcxproj.filters :"/>
+                    <ComboBox Margin="0,2,5,2" Height="20" SelectedItem="{Binding Path=SelectedFilterFile}" ItemsSource="{Binding Path=FilterFilesList}"/>
+                </DockPanel>
+
+                
+                <DockPanel LastChildFill="True">
+                    <TextBlock Margin="5" Text="Фильтр по расширению файла:"/>
+                    <Button Margin="0,0,5,0" Height="20" Width="80" DockPanel.Dock="Right" Content="Обновить" Command="{Binding C_UpdateExtensionFilter}"/>
+                    <TextBox Margin="0,0,5,0" Height="20" Text="{Binding Path=FilesFilter}">
                         <TextBox.ToolTip>
                             <ToolTip Content="Вводимое разрешение может быть разделено пробелом, запятой, точкой с запятой или двоеточием. Пример: .h .c;.cpp:makefile,.mk"/>
                         </TextBox.ToolTip>
@@ -47,9 +53,9 @@
                 <Separator/>
 
                 <DockPanel LastChildFill="True">
-                    <Button Margin="1" Width="140" Content="Добавить >>>" Command="{Binding C_AddSelected}"/>
-                    <Button Margin="1" Width="140" Content="Очистить всё" Command="{Binding C_ClearAll}"/>
-                    <Button Margin="1" Width="140" Content="Сохранить" Command="{Binding C_SaveFilters}"/>
+                    <Button Margin="1" Width="140" Height="20" Content="Обновить >>>" Command="{Binding C_AddSelected}"/>
+                    <!--<Button Margin="1" Width="140" Content="Очистить всё" Command="{Binding C_ClearAll}"/>-->
+                    <Button Margin="1" Width="140" Content="Сохранить изменения" Command="{Binding C_SaveFilters}"/>
                 </DockPanel>
                 <Separator/>
             </StackPanel>
@@ -99,7 +105,7 @@
                           
                         </StackPanel>
 
-                        <TreeView ItemsSource="{Binding Path=XDocAttributesList}" ScrollViewer.VerticalScrollBarVisibility="Visible" Grid.Row="1">
+                        <TreeView ItemsSource="{Binding Path=XFiltersFile}" ScrollViewer.VerticalScrollBarVisibility="Visible" Grid.Row="1">
                             <TreeView.ItemTemplate>
                                 <HierarchicalDataTemplate DataType="{x:Type Model:XDocItem}" ItemsSource="{Binding Items}">
                                     <StackPanel Orientation="Horizontal">

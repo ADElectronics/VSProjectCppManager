@@ -72,8 +72,9 @@
     <Compile Include="Models\FileItem.cs" />
     <Compile Include="Models\Item.cs" />
     <Compile Include="Models\XDocItem.cs" />
+    <Compile Include="ProjectFileProvider.cs" />
     <Compile Include="RelayCommand.cs" />
-    <Compile Include="XDocProvider.cs" />
+    <Compile Include="FiltersFileProvider.cs" />
     <Page Include="Views\MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

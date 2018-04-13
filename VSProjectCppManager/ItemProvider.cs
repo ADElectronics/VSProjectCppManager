@@ -54,7 +54,7 @@ namespace VSProjectCppManager
                 {
                     FileItem item;
 
-                    if (String.Compare(CutPathToProject.ToLower(), file.Directory.FullName.ToLower()) == 0)
+                    if (String.Equals(CutPathToProject.ToLower(), file.Directory.FullName.ToLower()))
                     {
                         item = new FileItem
                         {

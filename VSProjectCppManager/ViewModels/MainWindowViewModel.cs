@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using System.Xml;
 using Microsoft.Win32;
 using Prism.Mvvm;
 using VSProjectCppManager.Models;
@@ -15,6 +16,7 @@ namespace VSProjectCppManager.ViewModels
     public class MainWindowViewModel : BindableBase
     {
         List<Item> NewItems;
+        XmlDocument FiltersDoc;
 
         #region Публичные свойства
 
@@ -94,15 +96,54 @@ namespace VSProjectCppManager.ViewModels
         }
         #endregion
 
+        #region SelectedProjectFile
+        string _SelectedProjectFile;
+        public string SelectedProjectFile
+        {
+            get
+            {
+                return _SelectedProjectFile;
+            }
+            set
+            {
+                if (_SelectedProjectFile != value)
+                {
+                    _SelectedProjectFile = value;
+                    // UpdateFilterList();
+                    RaisePropertyChanged("SelectedProjectFile");
+                }
+            }
+        }
+        #endregion
+
+        #region ProjectFilesList
+        ObservableCollection<string> _ProjectFilesList;
+        public ObservableCollection<string> ProjectFilesList
+        {
+            get
+            {
+                if (_ProjectFilesList == null)
+                    _ProjectFilesList = new ObservableCollection<string>();
+                return _ProjectFilesList;
+            }
+            private set
+            {
+                if (_ProjectFilesList != value)
+                    _ProjectFilesList = value;
+            }
+        }
+        #endregion
+
         public ObservableCollection<Item> FilesList { get; set; } = new ObservableCollection<Item>();
-        public ObservableCollection<XDocItem> XDocAttributesList { get; set; } = new ObservableCollection<XDocItem>();
+        public ObservableCollection<XDocItem> XFiltersFile { get; set; } = new ObservableCollection<XDocItem>();
+
         #endregion
 
         #region Команды
         public ICommand C_SetPathToProject { get; set; }
         public ICommand C_AddSelected { get; set; }
         public ICommand C_ClearAll { get; set; }
-        public ICommand C_UpdateProject { get; set; }
+        public ICommand C_UpdateExtensionFilter { get; set; }
         public ICommand C_SaveFilters { get; set; }
         #endregion
 
@@ -125,6 +166,8 @@ namespace VSProjectCppManager.ViewModels
                     PathToProject = Path.GetDirectoryName(openFileDialog.FileName);
 
                     UpdateProjectList();
+                    UpdateFilterList();
+                    UpdateExtensionFilter();
                     //UpdateFilterList(); // автоматом при смене выбранного файла фильтров
                 }
             });
@@ -137,17 +180,10 @@ namespace VSProjectCppManager.ViewModels
             }, (p) => !String.IsNullOrEmpty(PathToProject) & !String.IsNullOrEmpty(FilesFilter));
             #endregion
 
-            #region C_ClearAll
-            C_ClearAll = new RelayCommand((p) =>
+            #region C_UpdateExtensionFilter
+            C_UpdateExtensionFilter = new RelayCommand((p) =>
             {
-
-            }, (p) => !String.IsNullOrEmpty(PathToProject) & !String.IsNullOrEmpty(FilesFilter));
-            #endregion
-
-            #region C_UpdateProject
-            C_UpdateProject = new RelayCommand((p) =>
-            {
-                UpdateProjectList();
+                UpdateExtensionFilter();
             }, (p) => !String.IsNullOrEmpty(PathToProject) & !String.IsNullOrEmpty(FilesFilter));
             #endregion
 
@@ -164,8 +200,24 @@ namespace VSProjectCppManager.ViewModels
 
         #region Приватные функции
         void UpdateProjectList()
+        {        
+            string[] plist = Directory.GetFiles(PathToProject, "*.vcxproj", SearchOption.TopDirectoryOnly);
+
+            ProjectFilesList.Clear();
+            if (plist != null)
+            {
+                foreach (var item in plist)
+                {
+                    ProjectFilesList.Add(item);
+                }
+                SelectedProjectFile = ProjectFilesList[ProjectFilesList.Count - 1];
+            }
+        }
+
+        void UpdateFilterList()
         {
             string[] flist = Directory.GetFiles(PathToProject, "*.vcxproj.filters", SearchOption.TopDirectoryOnly);
+
             FilterFilesList.Clear();
             if (flist != null)
             {
@@ -176,6 +228,16 @@ namespace VSProjectCppManager.ViewModels
                 SelectedFilterFile = FilterFilesList[FilterFilesList.Count - 1];
             }
 
+            XFiltersFile.Clear();
+            List<XDocItem> NewItems2 = FiltersFileProvider.GetItems(SelectedFilterFile);
+            NewItems2.ForEach((item) =>
+            {
+                XFiltersFile.Add(item);
+            });
+        }
+
+        void UpdateExtensionFilter()
+        {
             FilesList.Clear();
             ItemProvider.CutPathToProject = PathToProject;
             ItemProvider.SetExtensions(FilesFilter);
@@ -184,27 +246,23 @@ namespace VSProjectCppManager.ViewModels
             {
                 FilesList.Add(item);
             });
-            //RaisePropertyChanged("Items");
-        }
-
-        void UpdateFilterList()
-        {
-            XDocAttributesList.Clear();
-            List<XDocItem> NewItems2 = XDocProvider.GetItems(SelectedFilterFile);
-            NewItems2.ForEach((item) =>
-            {
-                XDocAttributesList.Add(item);
-            });
         }
 
         void AddFilterList()
         {
+            FiltersDoc = FiltersFileProvider.GenerateItems(NewItems);
+            List<XDocItem> temp = FiltersFileProvider.GetItems(FiltersDoc);
 
+            XFiltersFile.Clear();
+            temp.ForEach((item) =>
+            {
+                XFiltersFile.Add(item);
+            });
         }
 
         void SaveFilterList()
         {
-            XDocProvider.GenerateItems(NewItems);
+            
         }
         #endregion
     }

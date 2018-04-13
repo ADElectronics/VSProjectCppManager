@@ -11,13 +11,12 @@ using VSProjectCppManager.Models;
 
 namespace VSProjectCppManager
 {
-    public static class XDocProvider
+    public static class FiltersFileProvider
     {
         static string[] extensionsNone = new string[] { ".mk", "makefile" };
         static string[] extensionsClInclude = new string[] { ".hpp", ".h" };
         static string[] extensionsClCompile = new string[] { ".cpp", ".c", ".asm" };
 
-        // https://stackoverflow.com/questions/2294882/how-to-create-treeview-from-xml-file-using-wpf
         public static List<XDocItem> GetItems(string path)
         {
             XmlDocument xDoc = new XmlDocument();
@@ -25,6 +24,7 @@ namespace VSProjectCppManager
 
             return GetItems(xDoc);
         }
+
         public static List<XDocItem> GetItems(XmlDocument xDoc)
         {
             List<XDocItem> items = new List<XDocItem>();
@@ -105,8 +105,8 @@ namespace VSProjectCppManager
             }
 
             XmlNodeList childnodes = element.SelectNodes("ItemGroup");
-            foreach (XmlNode n in childnodes)
-                Debug.WriteLine(n.InnerText);
+            //foreach (XmlNode n in childnodes)
+            //    Debug.WriteLine(n.InnerText);
 
             return items;
         }
@@ -285,7 +285,7 @@ namespace VSProjectCppManager
             }
 
             // Для отладки
-            xDoc.Save("XMLFile_Debug.xml");
+            xDoc.Save("FiltersFile_Debug.xml");
 
             return xDoc;
         }
