@@ -1,6 +1,7 @@
 ﻿using System.Windows;
+using VSProjectCppManager.ViewModels;
 
-namespace VSProjectCppManager
+namespace VSProjectCppManager.Views
 {
     public partial class MainWindow : Window
     {

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using VSProjectCppManager.Model;
+using VSProjectCppManager.Models;
 
 namespace VSProjectCppManager
 {
@@ -52,12 +52,28 @@ namespace VSProjectCppManager
             {
                 if (extensions.Any(file.Extension.ToLower().Contains) | extensions.Any(file.Name.ToLower().Contains))
                 {
-                    FileItem item = new FileItem
+                    FileItem item;
+
+                    if (String.Compare(CutPathToProject.ToLower(), file.Directory.FullName.ToLower()) == 0)
                     {
-                        Name = file.Name,
-                        Path = file.FullName.Replace(CutPathToProject + "\\", String.Empty),
-                        Selected = true
-                    };
+                        item = new FileItem
+                        {
+                            Name = file.Name,
+                            Path = file.FullName.Replace(CutPathToProject + "\\", String.Empty),
+                            PathToFile = String.Empty,
+                            Selected = true
+                        };
+                    }
+                    else
+                    {
+                        item = new FileItem
+                        {
+                            Name = file.Name,
+                            Path = file.FullName.Replace(CutPathToProject + "\\", String.Empty),
+                            PathToFile = file.Directory.FullName.Replace(CutPathToProject + "\\", String.Empty),
+                            Selected = true
+                        };
+                    }
 
                     items.Add(item);
                 }

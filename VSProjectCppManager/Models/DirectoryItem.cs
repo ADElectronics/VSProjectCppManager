@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace VSProjectCppManager.Model
+namespace VSProjectCppManager.Models
 {
     public class DirectoryItem : Item
     {

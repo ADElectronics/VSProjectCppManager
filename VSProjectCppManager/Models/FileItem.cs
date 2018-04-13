@@ -1,8 +1,8 @@
 ﻿
-namespace VSProjectCppManager.Model
+namespace VSProjectCppManager.Models
 {
     public class FileItem : Item
-    {
+    {/*
         bool _Selected;
         public bool Selected
         {
@@ -19,7 +19,8 @@ namespace VSProjectCppManager.Model
                 }
             }
         }
-
+        */
         public string Extension { get; set; }
+        public string PathToFile { get; set; }
     }
 }

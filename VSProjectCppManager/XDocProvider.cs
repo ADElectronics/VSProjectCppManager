@@ -7,22 +7,27 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
-using VSProjectCppManager.Model;
+using VSProjectCppManager.Models;
 
 namespace VSProjectCppManager
 {
     public static class XDocProvider
     {
-        //static string[] extensionsNone = new string[] { ".mk", "makefile" };
+        static string[] extensionsNone = new string[] { ".mk", "makefile" };
         static string[] extensionsClInclude = new string[] { ".hpp", ".h" };
         static string[] extensionsClCompile = new string[] { ".cpp", ".c", ".asm" };
 
         // https://stackoverflow.com/questions/2294882/how-to-create-treeview-from-xml-file-using-wpf
         public static List<XDocItem> GetItems(string path)
         {
-            var items = new List<XDocItem>();
             XmlDocument xDoc = new XmlDocument();
             xDoc.Load(path);
+
+            return GetItems(xDoc);
+        }
+        public static List<XDocItem> GetItems(XmlDocument xDoc)
+        {
+            List<XDocItem> items = new List<XDocItem>();
             XmlElement element = xDoc.DocumentElement;
 
             foreach (XmlNode xnode in element) // ItemGroup
@@ -96,11 +101,7 @@ namespace VSProjectCppManager
 
                             break;
                     }
-
-
-
                 }
-
             }
 
             XmlNodeList childnodes = element.SelectNodes("ItemGroup");
@@ -110,11 +111,10 @@ namespace VSProjectCppManager
             return items;
         }
 
-        public static List<XDocItem> GenerateItems(List<Item> dirsFiles)//, string[] extFilter)
+        public static XmlDocument GenerateItems(List<Item> dirsFiles)//, string[] extFilter)
         {
-            List<XDocItem> items = new List<XDocItem>();
             XmlDocument xDoc = new XmlDocument();
-
+            // По хорошему надо еще научится грузить файл и обновлять значения в нём, а не переписывать всё
             //xDoc.Load("XMLFile2.xml");
             XmlDeclaration xmlDeclaration = xDoc.CreateXmlDeclaration("1.0", "UTF-8", null);
             XmlElement root = xDoc.DocumentElement;
@@ -128,7 +128,7 @@ namespace VSProjectCppManager
             // ClInclude - компилируемые h, hpp файлы (и другие?....)
             // ClCompile - компилируемые с, срр файлы (и другие?....)
 
-            for (byte i = 0; i < 4; i++)
+            for (byte i = 0; i < 4; i++) // без цикла никуда и никак) шутка. 
             {
                 XmlElement itemGroupElement = xDoc.CreateElement(string.Empty, "ItemGroup", string.Empty);
                 rootElement.AppendChild(itemGroupElement);
@@ -139,19 +139,23 @@ namespace VSProjectCppManager
                         
                         void NextDItem(Item rootitem)
                         {
-                            if(rootitem is FileItem)
-                            { 
-                                if (!extensionsClInclude.Any(rootitem.Name.ToLower().Contains) & !extensionsClCompile.Any(rootitem.Name.ToLower().Contains))
+
+                            if(rootitem.Selected & rootitem is FileItem)
+                            {
+                                //if (!extensionsClInclude.Any(rootitem.Name.ToLower().Contains) & !extensionsClCompile.Any(rootitem.Name.ToLower().Contains))
+                                if (extensionsNone.Any(rootitem.Name.ToLower().Contains))
                                 {                               
                                     XmlElement noneElement = xDoc.CreateElement(string.Empty, "None", string.Empty);
                                     noneElement.SetAttribute("Include", rootitem.Path);
                                     itemGroupElement.AppendChild(noneElement);
 
-                                    XmlElement noneFilterElement = xDoc.CreateElement(string.Empty, "Filter", string.Empty);
-                                    XmlText noneFilterText = xDoc.CreateTextNode(rootitem.Path);
-                                    noneFilterElement.AppendChild(noneFilterText);
-                                    noneElement.AppendChild(noneFilterElement);
-                                
+                                    if(((FileItem)rootitem).PathToFile != String.Empty)
+                                    {
+                                        XmlElement noneFilterElement = xDoc.CreateElement(string.Empty, "Filter", string.Empty);
+                                        XmlText noneFilterText = xDoc.CreateTextNode(((FileItem)rootitem).PathToFile);
+                                        noneFilterElement.AppendChild(noneFilterText);
+                                        noneElement.AppendChild(noneFilterElement);
+                                    }                   
                                 }
                             }
                             else if (rootitem is DirectoryItem)
@@ -206,17 +210,20 @@ namespace VSProjectCppManager
                         {
                             if (rootitem is FileItem)
                             {
-                                if (extensionsClInclude.Any(rootitem.Name.ToLower().Contains))
+                                if (rootitem.Selected & extensionsClInclude.Any(rootitem.Name.ToLower().Contains))
                                 {
 
                                     XmlElement clIncludeElement = xDoc.CreateElement(string.Empty, "ClInclude", string.Empty);
                                     clIncludeElement.SetAttribute("Include", rootitem.Path);
                                     itemGroupElement.AppendChild(clIncludeElement);
 
-                                    XmlElement clIncludeFilterElement = xDoc.CreateElement(string.Empty, "Filter", string.Empty);
-                                    XmlText clIncludeFilterText = xDoc.CreateTextNode(rootitem.Path);
-                                    clIncludeFilterElement.AppendChild(clIncludeFilterText);
-                                    clIncludeElement.AppendChild(clIncludeFilterElement);
+                                    if (((FileItem)rootitem).PathToFile != String.Empty)
+                                    {
+                                        XmlElement clIncludeFilterElement = xDoc.CreateElement(string.Empty, "Filter", string.Empty);
+                                        XmlText clIncludeFilterText = xDoc.CreateTextNode(((FileItem)rootitem).PathToFile);
+                                        clIncludeFilterElement.AppendChild(clIncludeFilterText);
+                                        clIncludeElement.AppendChild(clIncludeFilterElement);
+                                    }
                                 }
                             }
                             else if (rootitem is DirectoryItem)
@@ -240,16 +247,19 @@ namespace VSProjectCppManager
                         {
                             if (rootitem is FileItem)
                             {
-                                if (extensionsClCompile.Any(rootitem.Name.ToLower().Contains))
+                                if (rootitem.Selected & extensionsClCompile.Any(rootitem.Name.ToLower().Contains))
                                 {
                                     XmlElement clCompileElement = xDoc.CreateElement(string.Empty, "ClCompile", string.Empty);
                                     clCompileElement.SetAttribute("Include", rootitem.Path);
                                     itemGroupElement.AppendChild(clCompileElement);
 
-                                    XmlElement clCompileFilterElement = xDoc.CreateElement(string.Empty, "Filter", string.Empty);
-                                    XmlText clCompileFilterText = xDoc.CreateTextNode(rootitem.Path);
-                                    clCompileFilterElement.AppendChild(clCompileFilterText);
-                                    clCompileElement.AppendChild(clCompileFilterElement);
+                                    if (((FileItem)rootitem).PathToFile != String.Empty)
+                                    {
+                                        XmlElement clCompileFilterElement = xDoc.CreateElement(string.Empty, "Filter", string.Empty);
+                                        XmlText clCompileFilterText = xDoc.CreateTextNode(((FileItem)rootitem).PathToFile);
+                                        clCompileFilterElement.AppendChild(clCompileFilterText);
+                                        clCompileElement.AppendChild(clCompileFilterElement);
+                                    }
                                 }
                             }
                             else if (rootitem is DirectoryItem)
@@ -274,10 +284,10 @@ namespace VSProjectCppManager
 
             }
 
+            // Для отладки
+            xDoc.Save("XMLFile_Debug.xml");
 
-            xDoc.Save("XMLFile2.xml");
-
-            return items;
+            return xDoc;
         }
 
     }

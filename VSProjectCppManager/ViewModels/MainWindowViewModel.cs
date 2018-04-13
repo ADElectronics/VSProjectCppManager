@@ -7,11 +7,10 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Microsoft.Win32;
-using Prism.Events;
 using Prism.Mvvm;
-using VSProjectCppManager.Model;
+using VSProjectCppManager.Models;
 
-namespace VSProjectCppManager
+namespace VSProjectCppManager.ViewModels
 {
     public class MainWindowViewModel : BindableBase
     {
