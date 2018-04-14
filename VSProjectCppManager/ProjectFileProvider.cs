@@ -14,7 +14,7 @@ namespace VSProjectCppManager
     {
         XmlDocument xDoc;
         // Пока такое жесткое разделение на типы файлов вне зависимости от первичной фильтрации
-        static string[] extensionsNone = new string[] { ".mk", "makefile", ".s", ".ld", ".xaml", ".txt", ".a" };
+        static string[] extensionsNone = new string[] { ".mk", "makefile", ".s", ".ld", ".xaml", ".txt", ".a", ".py" };
         static string[] extensionsClInclude = new string[] { ".hpp", ".h" };
         static string[] extensionsClCompile = new string[] { ".cpp", ".c", ".asm" };
 

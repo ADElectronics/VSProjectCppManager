@@ -148,7 +148,7 @@ namespace VSProjectCppManager.ViewModels
         #region Main
         public MainWindowViewModel()
         {
-            FilesFilter = ".c .h .cpp makefile .mk .ld .s .asm .xaml .txt .a";
+            FilesFilter = ".c .h .cpp makefile .mk .ld .s .asm .xaml .txt .a .py";
 
             #region Команды
 
