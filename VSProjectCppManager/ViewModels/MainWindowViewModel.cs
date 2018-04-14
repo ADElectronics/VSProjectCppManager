@@ -15,8 +15,6 @@ namespace VSProjectCppManager.ViewModels
 {
     public class MainWindowViewModel : BindableBase
     {
-        List<Item> NewItems;
-        XmlDocument FiltersDoc;
 
         #region Публичные свойства
 
@@ -71,7 +69,7 @@ namespace VSProjectCppManager.ViewModels
                 if (_SelectedFilterFile != value)
                 {
                     _SelectedFilterFile = value;
-                    UpdateFilterList();
+                    //UpdateFilterList();
                     RaisePropertyChanged("SelectedFilterFile");
                 }
             }
@@ -109,7 +107,6 @@ namespace VSProjectCppManager.ViewModels
                 if (_SelectedProjectFile != value)
                 {
                     _SelectedProjectFile = value;
-                    // UpdateFilterList();
                     RaisePropertyChanged("SelectedProjectFile");
                 }
             }
@@ -134,8 +131,9 @@ namespace VSProjectCppManager.ViewModels
         }
         #endregion
 
-        public ObservableCollection<Item> FilesList { get; set; } = new ObservableCollection<Item>();
-        public ObservableCollection<XDocItem> XFiltersFile { get; set; } = new ObservableCollection<XDocItem>();
+        public ItemProvider Files { get; private set; } = new ItemProvider();
+        public ProjectFileProvider Project { get; private set; } = new ProjectFileProvider();
+        public FilterFileProvider Filters { get; private set; } = new FilterFileProvider();
 
         #endregion
 
@@ -150,7 +148,7 @@ namespace VSProjectCppManager.ViewModels
         #region Main
         public MainWindowViewModel()
         {
-            FilesFilter = ".c .h .cpp makefile .mk";
+            FilesFilter = ".c .h .cpp makefile .mk .ld .s .asm .xaml";
 
             #region Команды
 
@@ -212,6 +210,9 @@ namespace VSProjectCppManager.ViewModels
                 }
                 SelectedProjectFile = ProjectFilesList[ProjectFilesList.Count - 1];
             }
+
+            Project.LoadFrom(SelectedProjectFile);
+            Project.UpdateItems();
         }
 
         void UpdateFilterList()
@@ -228,41 +229,24 @@ namespace VSProjectCppManager.ViewModels
                 SelectedFilterFile = FilterFilesList[FilterFilesList.Count - 1];
             }
 
-            XFiltersFile.Clear();
-            List<XDocItem> NewItems2 = FiltersFileProvider.GetItems(SelectedFilterFile);
-            NewItems2.ForEach((item) =>
-            {
-                XFiltersFile.Add(item);
-            });
+            Filters.LoadFrom(SelectedFilterFile);
         }
 
         void UpdateExtensionFilter()
         {
-            FilesList.Clear();
-            ItemProvider.CutPathToProject = PathToProject;
-            ItemProvider.SetExtensions(FilesFilter);
-            NewItems = ItemProvider.GetItems(PathToProject);
-            NewItems.ForEach((item) =>
-            {
-                FilesList.Add(item);
-            });
+            Files.CutPathToProject = PathToProject;
+            Files.SetExtensions(FilesFilter);
+            Files.GetItems(PathToProject);
         }
 
         void AddFilterList()
         {
-            FiltersDoc = FiltersFileProvider.GenerateItems(NewItems);
-            List<XDocItem> temp = FiltersFileProvider.GetItems(FiltersDoc);
-
-            XFiltersFile.Clear();
-            temp.ForEach((item) =>
-            {
-                XFiltersFile.Add(item);
-            });
+            Filters.GenerateFrom(Files.Items);
         }
 
         void SaveFilterList()
         {
-            
+            Filters.SaveTo(SelectedFilterFile);
         }
         #endregion
     }

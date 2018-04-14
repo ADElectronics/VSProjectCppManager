@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -7,79 +8,82 @@ using VSProjectCppManager.Models;
 
 namespace VSProjectCppManager
 {
-    public static class ItemProvider
+    public class ItemProvider
     {
-        static string[] extensions = new string[] { ".c", ".h", ".mk", "makefile" };
+        string[] extensions = new string[] { ".c", ".h", ".mk", "makefile" };
 
-        public static string CutPathToProject { get; set; } = String.Empty;
-        public static string RemoveChars(this string input, params char[] chars)
-        {
-            var sb = new StringBuilder();
-            for (int i = 0; i < input.Length; i++)
-            {
-                if (!chars.Contains(input[i]))
-                    sb.Append(input[i]);
-            }
-            return sb.ToString();
-        }
+        #region Публичные свойства
+        public ObservableCollection<Item> Items { get; set; } = new ObservableCollection<Item>();
+        public string CutPathToProject { get; set; } = String.Empty;
+        #endregion
 
-        public static void SetExtensions(string ext)
+        public void SetExtensions(string ext)
         {
             char[] delimiters = new char[] { ',', ' ', ';', ':' };
             ext = ext.RemoveChars('*');
             extensions = ext.ToLower().Split(delimiters, StringSplitOptions.RemoveEmptyEntries);
         }
-
-        public static List<Item> GetItems(string path)
+       
+        public void GetItems(string path)
         {
-            List<Item> items = new List<Item>();
-            DirectoryInfo dirInfo = new DirectoryInfo(path);
+            Items.Clear();
 
-            foreach (DirectoryInfo directory in dirInfo.GetDirectories())
+            foreach(Item i in UpdateItems(path))
             {
-                var item = new DirectoryItem
-                {
-                    Name = directory.Name,
-                    Path = directory.FullName.Replace(CutPathToProject + "\\", String.Empty),
-                    Selected = true,
-                    Items = GetItems(directory.FullName),
-                };
-
-                items.Add(item);
+                Items.Add(i);
             }
 
-            foreach (FileInfo file in dirInfo.GetFiles())
+            List<Item> UpdateItems(string p)
             {
-                if (extensions.Any(file.Extension.ToLower().Contains) | extensions.Any(file.Name.ToLower().Contains))
+                DirectoryInfo dirInfo = new DirectoryInfo(p);
+                List<Item> NewItems = new List<Item>();
+
+                foreach (DirectoryInfo directory in dirInfo.GetDirectories())
                 {
-                    FileItem item;
-
-                    if (String.Equals(CutPathToProject.ToLower(), file.Directory.FullName.ToLower()))
+                    var item = new DirectoryItem
                     {
-                        item = new FileItem
-                        {
-                            Name = file.Name,
-                            Path = file.FullName.Replace(CutPathToProject + "\\", String.Empty),
-                            PathToFile = String.Empty,
-                            Selected = true
-                        };
-                    }
-                    else
-                    {
-                        item = new FileItem
-                        {
-                            Name = file.Name,
-                            Path = file.FullName.Replace(CutPathToProject + "\\", String.Empty),
-                            PathToFile = file.Directory.FullName.Replace(CutPathToProject + "\\", String.Empty),
-                            Selected = true
-                        };
-                    }
+                        Name = directory.Name,
+                        Path = directory.FullName.Replace(CutPathToProject + "\\", String.Empty),
+                        Selected = true,
+                        Items = UpdateItems(directory.FullName),
+                    };
 
-                    items.Add(item);
+                    NewItems.Add(item);
                 }
-            }
 
-            return items;
+                foreach (FileInfo file in dirInfo.GetFiles())
+                {
+                    if (extensions.Any(file.Extension.ToLower().Contains) | extensions.Any(file.Name.ToLower().Contains))
+                    {
+                        FileItem item;
+
+                        if (String.Equals(CutPathToProject.ToLower(), file.Directory.FullName.ToLower()))
+                        {
+                            item = new FileItem
+                            {
+                                Name = file.Name,
+                                Path = file.FullName.Replace(CutPathToProject + "\\", String.Empty),
+                                PathToFile = String.Empty,
+                                Selected = true
+                            };
+                        }
+                        else
+                        {
+                            item = new FileItem
+                            {
+                                Name = file.Name,
+                                Path = file.FullName.Replace(CutPathToProject + "\\", String.Empty),
+                                PathToFile = file.Directory.FullName.Replace(CutPathToProject + "\\", String.Empty),
+                                Selected = true
+                            };
+                        }
+
+                        NewItems.Add(item);
+                    }
+                }
+
+                return NewItems;
+            }           
         }
     }
 }

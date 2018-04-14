@@ -1,4 +1,4 @@
-﻿# Visual Studio Project C++ Manager of Included Files
+﻿# Visual Studio 2017 Project C++ Manager of Included Files
 
 *В процессе, еще не рабочая версия*
 

@@ -6,13 +6,13 @@
         xmlns:local="clr-namespace:VSProjectCppManager.Views"
         xmlns:Model="clr-namespace:VSProjectCppManager.Models" 
         mc:Ignorable="d"
-        Title="Visual Studio Project C++ Manager" 
-        Height="600" 
-        Width="800" 
+        Title="Visual Studio 2017 Project C++ Manager" 
+        Height="700" 
+        Width="1000" 
         WindowStartupLocation="CenterScreen">
 
     <Window.Resources>
-        
+
     </Window.Resources>
 
     <Grid>
@@ -33,13 +33,13 @@
                     <TextBlock Margin="5" Text="Файл проекта *.vcxproj :"/>
                     <ComboBox Margin="0,2,5,2" Height="20" SelectedItem="{Binding Path=SelectedProjectFile}" ItemsSource="{Binding Path=ProjectFilesList}"/>
                 </DockPanel>
-                
+
                 <DockPanel LastChildFill="True">
                     <TextBlock Margin="5" Text="Файл фильтров *.vcxproj.filters :"/>
                     <ComboBox Margin="0,2,5,2" Height="20" SelectedItem="{Binding Path=SelectedFilterFile}" ItemsSource="{Binding Path=FilterFilesList}"/>
                 </DockPanel>
 
-                
+
                 <DockPanel LastChildFill="True">
                     <TextBlock Margin="5" Text="Фильтр по расширению файла:"/>
                     <Button Margin="0,0,5,0" Height="20" Width="80" DockPanel.Dock="Right" Content="Обновить" Command="{Binding C_UpdateExtensionFilter}"/>
@@ -48,7 +48,7 @@
                             <ToolTip Content="Вводимое разрешение может быть разделено пробелом, запятой, точкой с запятой или двоеточием. Пример: .h .c;.cpp:makefile,.mk"/>
                         </TextBox.ToolTip>
                     </TextBox>
-                    
+
                 </DockPanel>
                 <Separator/>
 
@@ -68,16 +68,20 @@
                     </Grid.ColumnDefinitions>
 
                     <Grid Grid.Column="0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="2*"/>
+                            <ColumnDefinition Width="5*"/>
+                        </Grid.ColumnDefinitions>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="24"/>
                             <RowDefinition/>
                         </Grid.RowDefinitions>
-                        <StackPanel Grid.Row="0" Margin="5">
+                        <StackPanel Grid.Row="0" Margin="5" Grid.ColumnSpan="2">
                             <TextBlock Text="Содержание папки проекта:" />
-                         
+
                         </StackPanel>
-                        
-                        <TreeView ItemsSource="{Binding Path=FilesList}" ScrollViewer.VerticalScrollBarVisibility="Visible" Grid.Row="1">
+
+                        <TreeView ItemsSource="{Binding Path=Files.Items}" ScrollViewer.VerticalScrollBarVisibility="Visible" Grid.Row="1" Grid.ColumnSpan="2">
                             <TreeView.ItemTemplate>
                                 <HierarchicalDataTemplate DataType="{x:Type Model:Item}" ItemsSource="{Binding Items}">
                                     <CheckBox IsChecked="{Binding Path=Selected}" Content="{Binding Path=Name}" ToolTip="{Binding Path=Path}"/>
@@ -95,28 +99,34 @@
                         </TreeView>
                     </Grid>
 
-                    <Grid Grid.Column="1">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="24"/>
-                            <RowDefinition/>
-                        </Grid.RowDefinitions>
-                        <StackPanel Grid.Row="0" Margin="5">
-                            <TextBlock Text="Содержание файла фильтров:" />
-                          
-                        </StackPanel>
-
-                        <TreeView ItemsSource="{Binding Path=XFiltersFile}" ScrollViewer.VerticalScrollBarVisibility="Visible" Grid.Row="1">
-                            <TreeView.ItemTemplate>
-                                <HierarchicalDataTemplate DataType="{x:Type Model:XDocItem}" ItemsSource="{Binding Items}">
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="{Binding Path=Name}" FontWeight="Bold"/>
-                                        <TextBlock Text=" "/>
-                                        <TextBlock Text="{Binding Path=Value}" Foreground="DarkGray"/>
-                                    </StackPanel>
-                                </HierarchicalDataTemplate>
-                            </TreeView.ItemTemplate>
-                        </TreeView>
-                    </Grid>
+                    <TabControl Grid.Column="1">
+                        <TabItem Header="Файл фильтров">
+                            <TreeView ItemsSource="{Binding Path=Filters.Items}" ScrollViewer.VerticalScrollBarVisibility="Visible">
+                                <TreeView.ItemTemplate>
+                                    <HierarchicalDataTemplate DataType="{x:Type Model:XDocItem}" ItemsSource="{Binding Items}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding Path=Name}" FontWeight="Bold"/>
+                                            <TextBlock Text=" "/>
+                                            <TextBlock Text="{Binding Path=Value}" Foreground="DarkGray"/>
+                                        </StackPanel>
+                                    </HierarchicalDataTemplate>
+                                </TreeView.ItemTemplate>
+                            </TreeView>
+                        </TabItem>
+                        <TabItem Header="Файл проекта">
+                            <TreeView ItemsSource="{Binding Path=Project.Items}" ScrollViewer.VerticalScrollBarVisibility="Visible">
+                                <TreeView.ItemTemplate>
+                                    <HierarchicalDataTemplate DataType="{x:Type Model:XDocItem}" ItemsSource="{Binding Items}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding Path=Name}" FontWeight="Bold"/>
+                                            <TextBlock Text=" "/>
+                                            <TextBlock Text="{Binding Path=Value}" Foreground="DarkGray"/>
+                                        </StackPanel>
+                                    </HierarchicalDataTemplate>
+                                </TreeView.ItemTemplate>
+                            </TreeView>
+                        </TabItem>
+                    </TabControl>
                 </Grid>
             </DockPanel>
         </Grid>

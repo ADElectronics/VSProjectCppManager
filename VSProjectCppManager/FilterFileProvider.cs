@@ -11,24 +11,23 @@ using VSProjectCppManager.Models;
 
 namespace VSProjectCppManager
 {
-    public static class FiltersFileProvider
+    public class FilterFileProvider
     {
-        static string[] extensionsNone = new string[] { ".mk", "makefile" };
+        XmlDocument xDoc;
+
+        static string[] extensionsNone = new string[] { ".mk", "makefile", ".s", ".ld", ".xaml" };
         static string[] extensionsClInclude = new string[] { ".hpp", ".h" };
         static string[] extensionsClCompile = new string[] { ".cpp", ".c", ".asm" };
 
-        public static List<XDocItem> GetItems(string path)
-        {
-            XmlDocument xDoc = new XmlDocument();
-            xDoc.Load(path);
+        #region Публичные свойства
+        public ObservableCollection<XDocItem> Items { get; set; } = new ObservableCollection<XDocItem>();
 
-            return GetItems(xDoc);
-        }
+        #endregion      
 
-        public static List<XDocItem> GetItems(XmlDocument xDoc)
+        public void UpdateItems()
         {
-            List<XDocItem> items = new List<XDocItem>();
             XmlElement element = xDoc.DocumentElement;
+            Items.Clear();
 
             foreach (XmlNode xnode in element) // ItemGroup
             {
@@ -39,20 +38,23 @@ namespace VSProjectCppManager
                     //Path = xnode.Name.ToString()
                 };
 
-                items.Add(item);
+                Items.Add(item);
 
                 foreach (XmlNode childnode in xnode.ChildNodes) // Filter, None, ClInclude, ClCompile
                 {
-                    string nn = childnode.Attributes[0].Name; // Include
-                    string nnv = childnode.Attributes[0].Value;
+                    string data = String.Empty;
+                    if (childnode.Attributes != null && childnode.Attributes.Count > 0)
+                    {
+                        data = childnode.Attributes[0].Name + "=" + childnode.Attributes[0].Value;
+                    }
 
                     var childitem = new XDocItem
                     {
                         Name = childnode.Name.ToString(),
-                        Value = nn + "=" + nnv,
+                        Value = data,
                     };
 
-                    items[items.Count - 1].Items.Add(childitem);
+                    Items[Items.Count - 1].Items.Add(childitem);
 
                     switch (childnode.Name)
                     {
@@ -69,8 +71,8 @@ namespace VSProjectCppManager
                                     Value = fnode.InnerText,
                                 };
 
-                                Int32 count = items[items.Count - 1].Items.Count - 1;
-                                items[items.Count - 1].Items[count].Items.Add(childitem);
+                                Int32 count = Items[Items.Count - 1].Items.Count - 1;
+                                Items[Items.Count - 1].Items[count].Items.Add(childitem);
                             }
                             break;
 
@@ -95,25 +97,39 @@ namespace VSProjectCppManager
                                     Value = fnode.InnerText,
                                 };
 
-                                Int32 count = items[items.Count - 1].Items.Count - 1;
-                                items[items.Count - 1].Items[count].Items.Add(childitem);
+                                Int32 count = Items[Items.Count - 1].Items.Count - 1;
+                                Items[Items.Count - 1].Items[count].Items.Add(childitem);
                             }
 
                             break;
                     }
                 }
             }
-
-            XmlNodeList childnodes = element.SelectNodes("ItemGroup");
-            //foreach (XmlNode n in childnodes)
-            //    Debug.WriteLine(n.InnerText);
-
-            return items;
         }
 
-        public static XmlDocument GenerateItems(List<Item> dirsFiles)//, string[] extFilter)
+        public void LoadFrom(string path)
         {
-            XmlDocument xDoc = new XmlDocument();
+            xDoc = new XmlDocument();
+            xDoc.Load(path);
+            UpdateItems();
+        }
+
+        public void LoadFrom(XmlDocument doc)
+        {
+            xDoc = doc;
+            UpdateItems();
+        }
+
+        public void SaveTo(string path)
+        {
+            xDoc.Save(path);
+        }
+
+        public void GenerateFrom(ObservableCollection<Item> dirsFiles)
+        {
+            xDoc = new XmlDocument();
+
+            Items.Clear();
             // По хорошему надо еще научится грузить файл и обновлять значения в нём, а не переписывать всё
             //xDoc.Load("XMLFile2.xml");
             XmlDeclaration xmlDeclaration = xDoc.CreateXmlDeclaration("1.0", "UTF-8", null);
@@ -121,6 +137,8 @@ namespace VSProjectCppManager
             xDoc.InsertBefore(xmlDeclaration, root);
 
             XmlElement rootElement = xDoc.CreateElement(string.Empty, "Project", string.Empty);
+            rootElement.SetAttribute("ToolsVersion", "4.0");
+            rootElement.SetAttribute("xmlns", "http://schemas.microsoft.com/developer/msbuild/2003");
             xDoc.AppendChild(rootElement);
 
             // Filter - все корневые и вложенные папки, отображаем как фильтры
@@ -281,14 +299,12 @@ namespace VSProjectCppManager
 
                         break;
                 }
-
             }
 
             // Для отладки
             xDoc.Save("FiltersFile_Debug.xml");
 
-            return xDoc;
+            UpdateItems();
         }
-
     }
 }
