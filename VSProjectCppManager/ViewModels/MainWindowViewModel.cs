@@ -148,7 +148,7 @@ namespace VSProjectCppManager.ViewModels
         #region Main
         public MainWindowViewModel()
         {
-            FilesFilter = ".c .h .cpp makefile .mk .ld .s .asm .xaml";
+            FilesFilter = ".c .h .cpp makefile .mk .ld .s .asm .xaml .txt .a";
 
             #region Команды
 
@@ -174,7 +174,7 @@ namespace VSProjectCppManager.ViewModels
             #region C_AddSelected
             C_AddSelected = new RelayCommand((p) =>
             {
-                AddFilterList();
+                UpdateWithSelectedItems();
             }, (p) => !String.IsNullOrEmpty(PathToProject) & !String.IsNullOrEmpty(FilesFilter));
             #endregion
 
@@ -188,7 +188,7 @@ namespace VSProjectCppManager.ViewModels
             #region C_SaveFilters
             C_SaveFilters = new RelayCommand((p) =>
             {
-                SaveFilterList();
+                SaveAll();
             }, (p) => !String.IsNullOrEmpty(PathToProject) & !String.IsNullOrEmpty(FilesFilter));
             #endregion
 
@@ -230,6 +230,7 @@ namespace VSProjectCppManager.ViewModels
             }
 
             Filters.LoadFrom(SelectedFilterFile);
+            Filters.UpdateItems();
         }
 
         void UpdateExtensionFilter()
@@ -239,14 +240,18 @@ namespace VSProjectCppManager.ViewModels
             Files.GetItems(PathToProject);
         }
 
-        void AddFilterList()
+        void UpdateWithSelectedItems()
         {
             Filters.GenerateFrom(Files.Items);
+            Filters.UpdateItems();
+            Project.UpdateWith(Files.Items);
+            Project.UpdateItems();
         }
 
-        void SaveFilterList()
+        void SaveAll()
         {
             Filters.SaveTo(SelectedFilterFile);
+            Project.SaveTo(SelectedProjectFile);
         }
         #endregion
     }

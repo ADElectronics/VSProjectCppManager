@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
-using System.Text;
 using VSProjectCppManager.Models;
 
 namespace VSProjectCppManager
 {
     public class ItemProvider
     {
+        // Задаются пользователем
         string[] extensions = new string[] { ".c", ".h", ".mk", "makefile" };
 
         #region Публичные свойства
@@ -17,6 +17,7 @@ namespace VSProjectCppManager
         public string CutPathToProject { get; set; } = String.Empty;
         #endregion
 
+        #region Публичные методы
         public void SetExtensions(string ext)
         {
             char[] delimiters = new char[] { ',', ' ', ';', ':' };
@@ -85,5 +86,6 @@ namespace VSProjectCppManager
                 return NewItems;
             }           
         }
+        #endregion
     }
 }

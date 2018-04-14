@@ -14,110 +14,25 @@ namespace VSProjectCppManager
     public class FilterFileProvider
     {
         XmlDocument xDoc;
-
-        static string[] extensionsNone = new string[] { ".mk", "makefile", ".s", ".ld", ".xaml" };
+        // Пока такое жесткое разделение на типы файлов вне зависимости от первичной фильтрации
+        static string[] extensionsNone = new string[] { ".mk", "makefile", ".s", ".ld", ".xaml", ".txt", ".a" };
         static string[] extensionsClInclude = new string[] { ".hpp", ".h" };
         static string[] extensionsClCompile = new string[] { ".cpp", ".c", ".asm" };
 
         #region Публичные свойства
         public ObservableCollection<XDocItem> Items { get; set; } = new ObservableCollection<XDocItem>();
+        #endregion
 
-        #endregion      
-
-        public void UpdateItems()
-        {
-            XmlElement element = xDoc.DocumentElement;
-            Items.Clear();
-
-            foreach (XmlNode xnode in element) // ItemGroup
-            {
-                var item = new XDocItem
-                {
-                    Name = xnode.Name.ToString(),
-                    Value = xnode.Value,
-                    //Path = xnode.Name.ToString()
-                };
-
-                Items.Add(item);
-
-                foreach (XmlNode childnode in xnode.ChildNodes) // Filter, None, ClInclude, ClCompile
-                {
-                    string data = String.Empty;
-                    if (childnode.Attributes != null && childnode.Attributes.Count > 0)
-                    {
-                        data = childnode.Attributes[0].Name + "=" + childnode.Attributes[0].Value;
-                    }
-
-                    var childitem = new XDocItem
-                    {
-                        Name = childnode.Name.ToString(),
-                        Value = data,
-                    };
-
-                    Items[Items.Count - 1].Items.Add(childitem);
-
-                    switch (childnode.Name)
-                    {
-                        case "Filter": // 1
-
-                            if (childnode.ChildNodes.Count > 0)
-                            {
-                                XmlNode fnode = childnode.ChildNodes[0]; // UniqueIdentifier
-
-                                // Guid g = Guid.NewGuid();
-                                childitem = new XDocItem
-                                {
-                                    Name = fnode.Name.ToString(),
-                                    Value = fnode.InnerText,
-                                };
-
-                                Int32 count = Items[Items.Count - 1].Items.Count - 1;
-                                Items[Items.Count - 1].Items[count].Items.Add(childitem);
-                            }
-                            break;
-
-                        case "None": // 2 
-                        //    break;
-
-                        case "ClInclude": // 3
-                        //    break;
-
-                        case "ClCompile": // 4
-                        //    break;
-
-                        default:
-
-                            if (childnode.ChildNodes.Count > 0)
-                            {
-                                XmlNode fnode = childnode.ChildNodes[0]; // Filter
-
-                                childitem = new XDocItem
-                                {
-                                    Name = fnode.Name.ToString(),
-                                    Value = fnode.InnerText,
-                                };
-
-                                Int32 count = Items[Items.Count - 1].Items.Count - 1;
-                                Items[Items.Count - 1].Items[count].Items.Add(childitem);
-                            }
-
-                            break;
-                    }
-                }
-            }
-        }
-
+        #region Публичные методы
         public void LoadFrom(string path)
         {
             xDoc = new XmlDocument();
             xDoc.Load(path);
-            UpdateItems();
         }
 
         public void LoadFrom(XmlDocument doc)
         {
             xDoc = doc;
-            UpdateItems();
         }
 
         public void SaveTo(string path)
@@ -125,13 +40,58 @@ namespace VSProjectCppManager
             xDoc.Save(path);
         }
 
+        public void UpdateItems()
+        {
+            XmlElement DocElement = xDoc.DocumentElement;
+            Items.Clear();
+
+            foreach (XmlNode Node in DocElement) // ItemGroup
+            {
+                var NodeItem = new XDocItem
+                {
+                    Name = Node.Name.ToString(),
+                    Value = Node.Value,
+                    //Path = 
+                };
+
+                Items.Add(NodeItem);
+
+                foreach (XmlNode ChildNode in Node.ChildNodes) // Filter, None, ClInclude, ClCompile
+                {
+                    string ChildValueData = String.Empty;
+                    if (ChildNode.Attributes != null && ChildNode.Attributes.Count > 0)
+                    {
+                        ChildValueData = ChildNode.Attributes[0].Name + "=" + ChildNode.Attributes[0].Value;
+                    }
+
+                    var ChildItem = new XDocItem
+                    {
+                        Name = ChildNode.Name.ToString(),
+                        Value = ChildValueData,
+                    };
+
+                    Items[Items.Count - 1].Items.Add(ChildItem);
+
+                    if (ChildNode.ChildNodes.Count > 0)
+                    {
+                        XmlNode IntChildNode = ChildNode.ChildNodes[0];
+
+                        ChildItem = new XDocItem
+                        {
+                            Name = IntChildNode.Name.ToString(),
+                            Value = IntChildNode.InnerText,
+                        };
+
+                        Int32 ItemsCount = Items[Items.Count - 1].Items.Count - 1;
+                        Items[Items.Count - 1].Items[ItemsCount].Items.Add(ChildItem);
+                    }
+                }
+            }
+        }
+
         public void GenerateFrom(ObservableCollection<Item> dirsFiles)
         {
             xDoc = new XmlDocument();
-
-            Items.Clear();
-            // По хорошему надо еще научится грузить файл и обновлять значения в нём, а не переписывать всё
-            //xDoc.Load("XMLFile2.xml");
             XmlDeclaration xmlDeclaration = xDoc.CreateXmlDeclaration("1.0", "UTF-8", null);
             XmlElement root = xDoc.DocumentElement;
             xDoc.InsertBefore(xmlDeclaration, root);
@@ -155,32 +115,32 @@ namespace VSProjectCppManager
                 {
                     case 0: // ItemGroup - None - Filter
                         
-                        void NextDItem(Item rootitem)
+                        void NextDItem(Item RootItem)
                         {
 
-                            if(rootitem.Selected & rootitem is FileItem)
+                            if(RootItem.Selected & RootItem is FileItem)
                             {
                                 //if (!extensionsClInclude.Any(rootitem.Name.ToLower().Contains) & !extensionsClCompile.Any(rootitem.Name.ToLower().Contains))
-                                if (extensionsNone.Any(rootitem.Name.ToLower().Contains))
+                                if (extensionsNone.Any(RootItem.Name.ToLower().Contains))
                                 {                               
                                     XmlElement noneElement = xDoc.CreateElement(string.Empty, "None", string.Empty);
-                                    noneElement.SetAttribute("Include", rootitem.Path);
+                                    noneElement.SetAttribute("Include", RootItem.Path);
                                     itemGroupElement.AppendChild(noneElement);
 
-                                    if(((FileItem)rootitem).PathToFile != String.Empty)
+                                    if(((FileItem)RootItem).PathToFile != String.Empty)
                                     {
                                         XmlElement noneFilterElement = xDoc.CreateElement(string.Empty, "Filter", string.Empty);
-                                        XmlText noneFilterText = xDoc.CreateTextNode(((FileItem)rootitem).PathToFile);
+                                        XmlText noneFilterText = xDoc.CreateTextNode(((FileItem)RootItem).PathToFile);
                                         noneFilterElement.AppendChild(noneFilterText);
                                         noneElement.AppendChild(noneFilterElement);
                                     }                   
                                 }
                             }
-                            else if (rootitem is DirectoryItem)
+                            else if (RootItem is DirectoryItem)
                             {
-                                foreach (Item item in rootitem.Items.OfType<Item>())
+                                foreach (Item item in RootItem.Items.OfType<Item>())
                                 {
-                                    NextDItem((Item)item);
+                                    NextDItem(item);
                                 }
                             }
                         }
@@ -198,15 +158,15 @@ namespace VSProjectCppManager
                         {
                             if(rootitem.Selected)
                             { 
-                                Guid uniqueIdentifier = Guid.NewGuid();
-                                XmlElement filterElement = xDoc.CreateElement(string.Empty, "Filter", string.Empty);
-                                filterElement.SetAttribute("Include", rootitem.Path);
-                                itemGroupElement.AppendChild(filterElement);
+                                Guid UI = Guid.NewGuid();
+                                XmlElement FElement = xDoc.CreateElement(string.Empty, "Filter", string.Empty);
+                                FElement.SetAttribute("Include", rootitem.Path);
+                                itemGroupElement.AppendChild(FElement);
 
-                                XmlElement uniqueIdentifierElement = xDoc.CreateElement(string.Empty, "UniqueIdentifier", string.Empty);
-                                XmlText uniqueIdentifierText = xDoc.CreateTextNode(uniqueIdentifier.ToString());
-                                uniqueIdentifierElement.AppendChild(uniqueIdentifierText);
-                                filterElement.AppendChild(uniqueIdentifierElement);
+                                XmlElement UIElement = xDoc.CreateElement(string.Empty, "UniqueIdentifier", string.Empty);
+                                XmlText UIText = xDoc.CreateTextNode(UI.ToString());
+                                UIElement.AppendChild(UIText);
+                                FElement.AppendChild(UIElement);
                             }
 
                             foreach (DirectoryItem item in rootitem.Items.OfType<DirectoryItem>())
@@ -248,7 +208,7 @@ namespace VSProjectCppManager
                             {
                                 foreach (Item item in rootitem.Items.OfType<Item>())
                                 {
-                                    NextClIncItem((Item)item);
+                                    NextClIncItem(item);
                                 }
                             }
                         }
@@ -284,7 +244,7 @@ namespace VSProjectCppManager
                             {
                                 foreach (Item item in rootitem.Items.OfType<Item>())
                                 {
-                                    NextClComItem((Item)item);
+                                    NextClComItem(item);
                                 }
                             }
                         }
@@ -303,8 +263,7 @@ namespace VSProjectCppManager
 
             // Для отладки
             xDoc.Save("FiltersFile_Debug.xml");
-
-            UpdateItems();
         }
+        #endregion
     }
 }
