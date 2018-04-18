@@ -50,10 +50,16 @@ namespace VSProjectCppManager
 
                 foreach (XmlElement Element in ItemGroupList)
                 {
-                    if (Element.HasChildNodes & Element.ChildNodes[0].Name == NameOfChild)
+                    if (Element.HasChildNodes)
                     {
-                        element = Element;
-                        return element;
+                        foreach(XmlNode child in Element.ChildNodes)
+                        {
+                            if(child.Name == NameOfChild)
+                            {
+                                element = Element;
+                                return element;
+                            }
+                        }
                     }
                 }
 
@@ -62,9 +68,35 @@ namespace VSProjectCppManager
                 return element;
             }
 
+            // Локальная функция простого поиска\создания указанных элементов в документе
+            XmlElement FindChild(XmlDocument Doc, string NameOfChild, string NameOfElements)
+            {
+                // Получаем список елементов ItemGroup, в которых и хранятся списки файлов
+                XmlElement[] ItemGroupList = Doc.DocumentElement.GetElementsByTagName(NameOfElements).Cast<XmlElement>().ToArray<XmlElement>();
+
+                foreach (XmlElement Element in ItemGroupList)
+                {
+                    if (Element.HasChildNodes)
+                    {
+                        foreach (XmlElement child in Element.ChildNodes)
+                        {
+                            if (child.Name == NameOfChild)
+                            {
+                                return child;
+                            }
+                        }
+                    }
+                }
+
+                // не найден - ТУТ КОСЯК !!!! Пока не знаю как исправить 
+                XmlElement element = Doc.CreateElement(string.Empty, NameOfElements, string.Empty);
+                return element;
+            }
+
             XmlElement RootNoneElement = FindElement(xDoc, "None", "ItemGroup");
             XmlElement RootClIncludeElement = FindElement(xDoc, "ClInclude", "ItemGroup");
             XmlElement RootClCompileElement = FindElement(xDoc, "ClCompile", "ItemGroup");
+            XmlElement NMakeIncludeSearchPathElement = FindChild(xDoc, "NMakeIncludeSearchPath", "PropertyGroup");
 
             // Пока что просто очищаем всё и добавляем выбранное...
             // В дальнейшем надо сделать корректную проверку на наличие элементов и просто пропуск существующих уже
@@ -160,6 +192,31 @@ namespace VSProjectCppManager
             {
                 NextClComItem(item);
             }
+
+            // NMakeIncludeSearchPath - добавляем пути для IntelliSense
+            string IncludeDirs = String.Empty;
+            void NextInclDir(DirectoryItem rootitem)
+            {
+                if(rootitem.Selected)
+                {
+                    IncludeDirs += rootitem.Path + ";";
+                }         
+
+                foreach (DirectoryItem item in rootitem.Items.OfType<DirectoryItem>())
+                {
+                    NextInclDir(item);
+                }             
+            }
+
+            foreach (DirectoryItem item in dirsFiles.OfType<DirectoryItem>())
+            {
+                NextInclDir(item);
+            }
+            IncludeDirs += "$(NMakeIncludeSearchPath)";
+
+            XmlText IncludeDirsText = xDoc.CreateTextNode(IncludeDirs);
+            NMakeIncludeSearchPathElement.RemoveAll();
+            NMakeIncludeSearchPathElement.AppendChild(IncludeDirsText);
 
             // Для отладки
             xDoc.Save("ProjectFile_Debug.xml");
