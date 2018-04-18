@@ -220,17 +220,23 @@ namespace VSProjectCppManager.ViewModels
             string[] flist = Directory.GetFiles(PathToProject, "*.vcxproj.filters", SearchOption.TopDirectoryOnly);
 
             FilterFilesList.Clear();
-            if (flist != null)
+            if (flist != null && flist.Count<string>() > 0)
             {
                 foreach (var item in flist)
                 {
                     FilterFilesList.Add(item);
                 }
                 SelectedFilterFile = FilterFilesList[FilterFilesList.Count - 1];
-            }
 
-            Filters.LoadFrom(SelectedFilterFile);
-            Filters.UpdateItems();
+                Filters.LoadFrom(SelectedFilterFile);
+                Filters.UpdateItems();
+            }
+            else
+            {
+                string NewFilterFile = SelectedProjectFile + ".filters";
+                FilterFilesList.Add(NewFilterFile);
+                SelectedFilterFile = NewFilterFile;
+            } 
         }
 
         void UpdateExtensionFilter()

@@ -18,6 +18,10 @@ namespace VSProjectCppManager
         static string[] extensionsClInclude = new string[] { ".hpp", ".h" };
         static string[] extensionsClCompile = new string[] { ".cpp", ".c", ".asm" };
 
+        static string configurationPlatformName = "Condition";
+        static string configurationPlatformValue = "'$(Configuration)|$(Platform)'=='Debug|ARM'";
+        static string namespaseURI = "http://schemas.microsoft.com/developer/msbuild/2003";
+
         #region Публичные свойства
         public ObservableCollection<XDocItem> Items { get; set; } = new ObservableCollection<XDocItem>();
         #endregion
@@ -46,7 +50,6 @@ namespace VSProjectCppManager
             {
                 // Получаем список елементов ItemGroup, в которых и хранятся списки файлов
                 XmlElement[] ItemGroupList = Doc.DocumentElement.GetElementsByTagName(NameOfElements).Cast<XmlElement>().ToArray<XmlElement>();
-                XmlElement element;
 
                 foreach (XmlElement Element in ItemGroupList)
                 {
@@ -56,15 +59,15 @@ namespace VSProjectCppManager
                         {
                             if(child.Name == NameOfChild)
                             {
-                                element = Element;
-                                return element;
+                                return Element;
                             }
                         }
                     }
                 }
 
                 // не найден
-                element = Doc.CreateElement(string.Empty, NameOfElements, string.Empty);
+                XmlElement element = Doc.CreateElement(NameOfElements, namespaseURI);
+                Doc.DocumentElement.AppendChild(element);
                 return element;
             }
 
@@ -88,9 +91,44 @@ namespace VSProjectCppManager
                     }
                 }
 
-                // не найден - ТУТ КОСЯК !!!! Пока не знаю как исправить 
-                XmlElement element = Doc.CreateElement(string.Empty, NameOfElements, string.Empty);
-                return element;
+                // не найден, смотрим по аттрибутам подходящую группу
+                foreach (XmlElement Element in ItemGroupList)
+                {
+                    bool Configuration = false;
+
+                    if (Element.Attributes.Count > 0)
+                    {
+                        foreach (XmlAttribute att in Element.Attributes)
+                        {
+                            if (att.Name == "Label" && att.Value == "Configuration")
+                                Configuration = true;
+                        }
+
+                        if (!Configuration)
+                        {
+                            foreach (XmlAttribute att in Element.Attributes)
+                            {
+                                if (att.Name == configurationPlatformName && att.Value == configurationPlatformValue)
+                                {
+
+                                    XmlElement child = Doc.CreateElement(NameOfChild, namespaseURI);
+                                    Element.AppendChild(child);
+                                    return child;
+                                }
+                            }
+                        }
+                    }
+                }
+
+
+                // всё очень плохо - не найдено, создаём свою
+                XmlElement element = Doc.CreateElement(NameOfElements, namespaseURI);
+                element.SetAttribute(configurationPlatformName, configurationPlatformValue);
+                Doc.DocumentElement.AppendChild(element);
+                XmlElement child_new = Doc.CreateElement(NameOfChild, namespaseURI);
+                element.AppendChild(child_new);
+
+                return child_new;
             }
 
             XmlElement RootNoneElement = FindElement(xDoc, "None", "ItemGroup");
@@ -216,6 +254,7 @@ namespace VSProjectCppManager
 
             XmlText IncludeDirsText = xDoc.CreateTextNode(IncludeDirs);
             NMakeIncludeSearchPathElement.RemoveAll();
+            NMakeIncludeSearchPathElement.RemoveAllAttributes();
             NMakeIncludeSearchPathElement.AppendChild(IncludeDirsText);
 
             // Для отладки
